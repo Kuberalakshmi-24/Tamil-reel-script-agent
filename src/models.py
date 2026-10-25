@@ -1,5 +1,5 @@
-"""Pydantic data models for the Tamil Reel Script Agent pipeline."""
-
+import re
+from pathlib import Path
 from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel, Field
 from src.config import (
@@ -122,9 +122,13 @@ class ScriptDraft(BaseModel):
         return "\n".join(parts)
 
     def calculate_word_count(self) -> int:
-        """Calculate pure spoken words across all script segments."""
-        raw_text = f"{self.hook} {self.context} {' '.join(self.body_points)} {self.engagement} {self.cta}"
-        return len(raw_text.split())
+        """Calculate pure spoken words across all script segments, excluding bullet numbers."""
+        # Strip leading numbers like '1. ', '2. '
+        cleaned_points = [re.sub(r"^\d+[\.\)]\s*", "", p) for p in self.body_points]
+        raw_text = f"{self.hook} {self.context} {' '.join(cleaned_points)} {self.engagement} {self.cta}"
+        # Extract unicode words (handles both Latin Tanglish and Tamil Unicode)
+        tokens = re.findall(r"\b[\w\-']+\b", raw_text, flags=re.UNICODE)
+        return len(tokens)
 
 
 class CheckItem(BaseModel):
@@ -240,3 +244,19 @@ class FullDeliverable(BaseModel):
 
         lines.append("")
         return "\n".join(lines)
+
+    def save_deliverables(self, base_path: Path):
+        """Save both human-readable Markdown and machine-readable JSON."""
+        base_path.parent.mkdir(parents=True, exist_ok=True)
+        # Markdown
+        md_file = base_path.with_suffix(".md")
+        md_file.write_text(self.to_markdown(), encoding="utf-8")
+        # JSON (State file for regeneration)
+        json_file = base_path.with_suffix(".json")
+        json_file.write_text(self.model_dump_json(indent=2), encoding="utf-8")
+
+    @classmethod
+    def load_from_json(cls, json_path: Path) -> "FullDeliverable":
+        """Load deliverable state from JSON."""
+        return cls.model_validate_json(json_path.read_text(encoding="utf-8"))
+

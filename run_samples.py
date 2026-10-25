@@ -13,16 +13,13 @@ if sys.platform == "win32":
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 from pathlib import Path
-from rich.console import Console
 from src.models import ScriptInput
 from src.pipeline import TamilReelScriptPipeline
 from src.config import DELIVERABLES_DIR
 
-console = Console(safe_box=True)
-
 TEST_CASES = [
     {
-        "filename": "topic1_website_leads.md",
+        "stem": "topic1_website_leads",
         "input": ScriptInput.create_with_defaults(
             topic="Why are businesses not getting leads from their websites?",
             audience="Small business owners",
@@ -33,7 +30,7 @@ TEST_CASES = [
         ),
     },
     {
-        "filename": "topic2_seo_mistakes.md",
+        "stem": "topic2_seo_mistakes",
         "input": ScriptInput.create_with_defaults(
             topic="Common SEO mistakes and ranking myths for small businesses",
             audience="Local shop owners and Tamil entrepreneurs",
@@ -44,7 +41,7 @@ TEST_CASES = [
         ),
     },
     {
-        "filename": "topic3_germany_visa.md",
+        "stem": "topic3_germany_visa",
         "input": ScriptInput.create_with_defaults(
             topic="Germany Opportunity Card (Chancenkarte) and job seeker visa requirements",
             audience="Tamil graduates and tech professionals planning to work in Germany",
@@ -63,17 +60,17 @@ def run_all_samples():
 
     for i, test in enumerate(TEST_CASES, 1):
         inp = test["input"]
-        filename = test["filename"]
-        out_path = DELIVERABLES_DIR / filename
+        stem = test["stem"]
+        out_base = DELIVERABLES_DIR / stem
 
         print(f"({i}/{len(TEST_CASES)}) Processing Topic: {inp.topic}")
         print(f"  Duration: {inp.duration}s | Tone: {inp.tone} | Objective: {inp.objective}")
 
         deliverable = pipeline.run(inp)
-        md_text = deliverable.to_markdown()
+        deliverable.save_deliverables(out_base)
 
-        out_path.write_text(md_text, encoding="utf-8")
-        print(f"  [SAVED] {out_path}\n")
+        print(f"  [SAVED] {out_base.with_suffix('.md')}")
+        print(f"  [SAVED] {out_base.with_suffix('.json')}\n")
 
     print(">> All 3 sample deliverables generated successfully in deliverables/ directory!")
 

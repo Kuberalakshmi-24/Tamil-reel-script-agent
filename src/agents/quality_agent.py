@@ -1,7 +1,7 @@
 """Step 3: Quality Check and Self-Correction Agent."""
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from src.models import (
     ScriptInput,
     ResearchResult,
@@ -22,11 +22,12 @@ class QualityAgent:
     def __init__(self, llm_client: LLMClient):
         self.llm = llm_client
 
-    def execute(self, inp: ScriptInput, research: ResearchResult, draft: ScriptDraft) -> QualityCheckResult:
-        """Evaluate 5 criteria, auto-fix any flagged defect, and return the certified audit result."""
+    def execute(
+        self, inp: ScriptInput, research: ResearchResult, draft: ScriptDraft
+    ) -> Tuple[QualityCheckResult, ScriptDraft]:
+        """Evaluate 5 criteria, auto-fix any flagged defect, and return (QualityCheckResult, updated_draft)."""
         limits = WORD_COUNT_LIMITS.get(inp.duration, {"min": 60, "max": 75})
         actual_words = draft.calculate_word_count()
-        draft.word_count = actual_words
 
         user_prompt = f"""Topic: {inp.topic}
 Audience: {inp.audience}
@@ -128,21 +129,24 @@ Perform the 5-point quality audit. If any criteria is flagged, you MUST provide 
         fixes_applied = data.get("fixes_applied", [])
         revised = data.get("revised_script")
 
-        # If fixes were provided by LLM, apply them directly to draft
+        # Create updated draft copy without mutating original
+        updated_draft = draft.model_copy(deep=True)
         if revised and isinstance(revised, dict):
             if revised.get("hook"):
-                draft.hook = revised["hook"]
+                updated_draft.hook = revised["hook"]
             if revised.get("context"):
-                draft.context = revised["context"]
+                updated_draft.context = revised["context"]
             if revised.get("body_points"):
-                draft.body_points = revised["body_points"]
+                updated_draft.body_points = revised["body_points"]
             if revised.get("engagement"):
-                draft.engagement = revised["engagement"]
+                updated_draft.engagement = revised["engagement"]
             if revised.get("cta"):
-                draft.cta = revised["cta"]
-            draft.word_count = draft.calculate_word_count()
+                updated_draft.cta = revised["cta"]
+            updated_draft.word_count = updated_draft.calculate_word_count()
+        else:
+            updated_draft.word_count = updated_draft.calculate_word_count()
 
-        return QualityCheckResult(
+        qc_result = QualityCheckResult(
             unsupported_claims=CheckItem(
                 status=checks_data.get("unsupported_claims", {}).get("status", "PASS"),
                 notes=checks_data.get("unsupported_claims", {}).get("notes", "Verified."),
@@ -161,7 +165,9 @@ Perform the 5-point quality audit. If any criteria is flagged, you MUST provide 
             ),
             duration_fit=CheckItem(
                 status=checks_data.get("duration_fit", {}).get("status", "PASS"),
-                notes=checks_data.get("duration_fit", {}).get("notes", f"Word count ({draft.word_count}w) calibrated."),
+                notes=checks_data.get("duration_fit", {}).get("notes", f"Word count ({updated_draft.word_count}w) calibrated."),
             ),
             fixes_applied=fixes_applied,
         )
+
+        return qc_result, updated_draft

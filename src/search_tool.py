@@ -4,42 +4,37 @@ import logging
 import warnings
 from typing import List, Dict
 
-# Suppress package rename warning
-warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
+# Suppress package rename and third-party runtime warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 logger = logging.getLogger(__name__)
 
 
 def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
-    """Execute a web search query and return formatted results with title, link, and snippet.
+    """Execute a web search query and return formatted results.
     
-    Args:
-        query: Search query string.
-        max_results: Max results to fetch (default: 5).
-        
-    Returns:
-        List of dicts with keys: 'title', 'url', 'snippet'.
+    Returns an empty list on failure to prevent hallucinated URLs.
     """
     results = []
     try:
         from duckduckgo_search import DDGS
 
-        ddgs = DDGS()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ddgs = DDGS()
         raw_results = list(ddgs.text(query, max_results=max_results))
         for item in raw_results:
-            results.append({
-                "title": item.get("title", ""),
-                "url": item.get("href", "") or item.get("link", ""),
-                "snippet": item.get("body", ""),
-            })
+            url = item.get("href") or item.get("link") or ""
+            if url:
+                results.append({
+                    "title": item.get("title", "Source"),
+                    "url": url,
+                    "snippet": item.get("body", "").strip(),
+                })
     except Exception as e:
         logger.warning(f"DuckDuckGo search error for query '{query}': {e}")
-        # Return fallback empty or basic mock to prevent pipeline crash if offline
-        results.append({
-            "title": f"Search fallback for: {query}",
-            "url": "https://official.info/verify",
-            "snippet": f"Official documentation and industry standard data regarding {query}.",
-        })
+        # Return empty list — never invent fake URLs like 'https://official.info/verify'
+        return []
 
     return results
 

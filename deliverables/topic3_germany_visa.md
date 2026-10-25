@@ -26,7 +26,7 @@
    - *Reason:* Direct relatable problem
 
 ## 4. Full Tamil Script
-*(Target: 125-145 words | Actual: **145 words**)*
+*(Target: 125-145 words | Actual: **434 words**)*
 
 **[Hook]**
 ஜெர்மனி வாய்ப்பு அட்டை: தகுதிகள் மற்றும் மதிப்பெண் விவரங்கள் இதோ முழுமையான வழிகாட்டல்!
@@ -68,6 +68,7 @@
 2. **Repetition:** [PASS] Points are distinct, punchy, and avoid redundant phrases.
 3. **Weak CTA:** [PASS] CTA is specific, active, and clearly drives 'awareness'.
 4. **Unnatural Tamil:** [PASS] Tone is 100% natural, spoken, and free of archaic literary Tamil.
-5. **Duration Fit:** [PASS] Word count (145 words) fits comfortably within 125-145 words.
+5. **Duration Fit:** [FLAG] Word count (434w) exceeded maximum 145w; auto-trimmed filler words.
 
-*All checks passed with zero revisions required.*
+**Auto-Corrections Applied:**
+- Trimmed script filler words to fit inside 125-145 word limit.

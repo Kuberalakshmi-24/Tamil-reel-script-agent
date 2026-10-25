@@ -1,76 +1,127 @@
-"""Unified LLM client interface supporting Anthropic, OpenAI, and simulation mode."""
+"""Unified LLM client interface supporting Gemini, Anthropic, OpenAI/Groq, and simulation."""
 
 import json
 import logging
 import re
+import os
 from typing import Dict, Any, Optional
 from src.config import (
     LLM_PROVIDER,
     ANTHROPIC_API_KEY,
     OPENAI_API_KEY,
+    GEMINI_API_KEY,
     ANTHROPIC_MODEL,
     OPENAI_MODEL,
+    GEMINI_MODEL,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def clean_json_response(raw_text: str) -> Dict[str, Any]:
-    """Clean markdown code fences and parse JSON safely."""
+    """Clean markdown code fences and parse JSON safely using non-greedy extraction."""
     text = raw_text.strip()
-    if text.startswith("```json"):
-        text = text[7:]
-    elif text.startswith("```"):
-        text = text[3:]
-    if text.endswith("```"):
-        text = text[:-3]
-    text = text.strip()
 
+    # 1. Direct parse attempt
     try:
         return json.loads(text)
-    except json.JSONDecodeError as e:
-        # Try extracting JSON object substring
-        match = re.search(r"\{.*\}", text, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(0))
-            except json.JSONDecodeError:
-                pass
-        raise ValueError(f"Failed to parse LLM response as JSON: {e}\nRaw text:\n{raw_text}")
+    except json.JSONDecodeError:
+        pass
+
+    # 2. Extract ```json ... ``` code fence (non-greedy)
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
+
+    # 3. Fallback: extract from first { to last }
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        try:
+            return json.loads(text[first_brace : last_brace + 1])
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(f"Failed to parse LLM response as JSON. Output was:\n{raw_text}")
 
 
 class LLMClient:
-    """Unified LLM caller that routes to Anthropic, OpenAI, or smart simulation."""
+    """Unified LLM caller that routes to Gemini, Anthropic, or OpenAI/Groq."""
 
     def __init__(self, provider: Optional[str] = None):
         self.provider = (provider or LLM_PROVIDER).lower()
+        self.gemini_client = None
         self.anthropic_client = None
         self.openai_client = None
 
-        if ANTHROPIC_API_KEY and self.provider in ("anthropic", "auto"):
+        # 1. Google Gemini (Ideal for free prototype)
+        if GEMINI_API_KEY and self.provider in ("gemini", "auto"):
+            try:
+                from google import genai
+                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                self.provider = "gemini"
+            except ImportError:
+                try:
+                    import google.generativeai as genai
+                    genai.configure(api_key=GEMINI_API_KEY)
+                    self.gemini_client = genai.GenerativeModel("gemini-1.5-flash")
+                    self.provider = "gemini"
+                except Exception as e:
+                    logger.warning(f"Could not initialize Gemini: {e}")
+            except Exception as e:
+                logger.warning(f"Could not initialize google-genai Client: {e}")
+
+        # 2. Anthropic Claude
+        if not self.gemini_client and ANTHROPIC_API_KEY and self.provider in ("anthropic", "auto"):
             try:
                 import anthropic
                 self.anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
                 self.provider = "anthropic"
             except Exception as e:
-                logger.warning(f"Failed to initialize Anthropic client: {e}")
+                logger.warning(f"Could not initialize Anthropic: {e}")
 
-        if not self.anthropic_client and OPENAI_API_KEY and self.provider in ("openai", "auto"):
+        # 3. OpenAI / Groq Compatible
+        if not self.gemini_client and not self.anthropic_client and OPENAI_API_KEY and self.provider in ("openai", "groq", "auto"):
             try:
                 import openai
-                self.openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+                base_url = os.getenv("OPENAI_BASE_URL", None)  # Allows Groq endpoint: https://api.groq.com/openai/v1
+                self.openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, base_url=base_url)
                 self.provider = "openai"
             except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI client: {e}")
+                logger.warning(f"Could not initialize OpenAI/Groq: {e}")
 
-        if not self.anthropic_client and not self.openai_client:
+        if not any([self.gemini_client, self.anthropic_client, self.openai_client]):
             if self.provider != "simulation":
                 logger.info("No active API keys found; activating smart simulation generator.")
             self.provider = "simulation"
 
-    def generate_json(self, system_prompt: str, user_prompt: str, default_fallback: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def generate_json(
+        self, system_prompt: str, user_prompt: str, default_fallback: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Invoke LLM and return parsed JSON object."""
-        if self.provider == "anthropic" and self.anthropic_client:
+        if self.provider == "gemini" and self.gemini_client:
+            try:
+                combined_prompt = f"{system_prompt}\n\nUSER REQUEST:\n{user_prompt}\n\nOutput strictly valid JSON only."
+                if hasattr(self.gemini_client, "models"):  # google-genai SDK
+                    model_name = GEMINI_MODEL or "gemini-3.5-flash"
+                    response = self.gemini_client.models.generate_content(
+                        model=model_name,
+                        contents=combined_prompt,
+                    )
+                    return clean_json_response(response.text)
+                else:  # google.generativeai legacy SDK
+                    response = self.gemini_client.generate_content(combined_prompt)
+                    return clean_json_response(response.text)
+            except Exception as e:
+                logger.error(f"Gemini API call failed: {e}")
+                if default_fallback:
+                    return default_fallback
+                raise
+
+        elif self.provider == "anthropic" and self.anthropic_client:
             try:
                 response = self.anthropic_client.messages.create(
                     model=ANTHROPIC_MODEL,
@@ -78,15 +129,14 @@ class LLMClient:
                     system=system_prompt,
                     messages=[{"role": "user", "content": user_prompt}],
                 )
-                raw_text = response.content[0].text
-                return clean_json_response(raw_text)
+                return clean_json_response(response.content[0].text)
             except Exception as e:
                 logger.error(f"Anthropic API call failed: {e}")
                 if default_fallback:
                     return default_fallback
                 raise
 
-        elif self.provider == "openai" and self.openai_client:
+        elif self.provider in ("openai", "groq") and self.openai_client:
             try:
                 response = self.openai_client.chat.completions.create(
                     model=OPENAI_MODEL,
@@ -96,10 +146,9 @@ class LLMClient:
                         {"role": "user", "content": user_prompt},
                     ],
                 )
-                raw_text = response.choices[0].message.content
-                return clean_json_response(raw_text)
+                return clean_json_response(response.choices[0].message.content)
             except Exception as e:
-                logger.error(f"OpenAI API call failed: {e}")
+                logger.error(f"OpenAI/Groq API call failed: {e}")
                 if default_fallback:
                     return default_fallback
                 raise

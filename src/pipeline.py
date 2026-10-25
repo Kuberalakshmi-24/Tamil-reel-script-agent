@@ -62,12 +62,12 @@ class TamilReelScriptPipeline:
 
         # Step 3: Quality Check & Self-Correction
         logger.info("[Step 3/3] Executing Quality Compliance Agent...")
-        qc = self.quality_agent.execute(inp, research, draft)
+        qc, certified_script = self.quality_agent.execute(inp, research, draft)
 
         return FullDeliverable(
             input_data=inp,
             research=research,
-            script=draft,
+            script=certified_script,
             quality_check=qc,
         )
 
@@ -75,12 +75,12 @@ class TamilReelScriptPipeline:
         """Regenerate only hooks while reusing existing research and script body."""
         logger.info("Executing targeted regeneration for HOOKS...")
         updated_draft = self.script_agent.regenerate_hooks(inp, base.script)
-        qc = self.quality_agent.execute(inp, base.research, updated_draft)
+        qc, certified_script = self.quality_agent.execute(inp, base.research, updated_draft)
 
         return FullDeliverable(
             input_data=inp,
             research=base.research,
-            script=updated_draft,
+            script=certified_script,
             quality_check=qc,
         )
 
@@ -88,11 +88,11 @@ class TamilReelScriptPipeline:
         """Regenerate only CTA while reusing existing research and script body."""
         logger.info("Executing targeted regeneration for CTA...")
         updated_draft = self.script_agent.regenerate_cta(inp, base.script)
-        qc = self.quality_agent.execute(inp, base.research, updated_draft)
+        qc, certified_script = self.quality_agent.execute(inp, base.research, updated_draft)
 
         return FullDeliverable(
             input_data=inp,
             research=base.research,
-            script=updated_draft,
+            script=certified_script,
             quality_check=qc,
         )
