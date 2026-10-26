@@ -58,6 +58,7 @@ Tamil-reel-script-agent/
 │   ├── conftest.py                         # Pytest configuration
 │   └── test_pipeline.py                    # Unit and integration test suite
 ├── api.py                                  # FastAPI REST application with CORS & schemas
+├── app.py                                  # Streamlit interactive web dashboard
 ├── main.py                                 # Server entrypoint: boots Uvicorn ASGI server
 ├── run_samples.py                          # Batch generator for the 3 sample deliverables
 ├── requirements.txt                        # Clean dependency specifications
@@ -110,6 +111,19 @@ uvicorn api:app --reload --port 8000
 Once running, the backend server is live on `http://localhost:8000`:
 * **Interactive Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
 * **ReDoc Schema:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+---
+
+## 🎬 Running the Web Dashboard (Streamlit)
+
+For an interactive browser UI to generate, inspect, regenerate hooks/CTAs, and download scripts:
+
+```bash
+python -m streamlit run app.py
+```
+
+The web dashboard will automatically open at:
+* **Studio URL:** [http://localhost:8501](http://localhost:8501)
 
 ---
 

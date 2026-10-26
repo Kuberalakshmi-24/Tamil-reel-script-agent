@@ -1,16 +1,8 @@
 """Batch runner to generate the 3 mandatory sample deliverables specified in the assignment."""
 
-import sys
-import io
+from src.utils import setup_utf8_console
 
-# Ensure UTF-8 output encoding on Windows consoles
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+setup_utf8_console()
 
 from pathlib import Path
 from src.models import ScriptInput

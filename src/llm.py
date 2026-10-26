@@ -116,7 +116,14 @@ class LLMClient:
                     response = self.gemini_client.generate_content(combined_prompt)
                     return clean_json_response(response.text)
             except Exception as e:
-                logger.error(f"Gemini API call failed: {e}")
+                err_str = str(e)
+                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                    logger.warning("Gemini Free Tier daily limit reached (20 req/day). Using calibrated generator fallback.")
+                elif "503" in err_str or "UNAVAILABLE" in err_str:
+                    logger.warning("Gemini model temporarily busy (503). Using calibrated generator fallback.")
+                else:
+                    logger.error(f"Gemini API call failed: {e}")
+
                 if default_fallback:
                     return default_fallback
                 raise

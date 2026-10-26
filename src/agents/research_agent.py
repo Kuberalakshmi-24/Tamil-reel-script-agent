@@ -2,11 +2,12 @@
 
 import logging
 import re
-from typing import List, Dict, Any
+from typing import List
 from src.models import ScriptInput, ResearchResult, SourceItem
 from src.search_tool import run_research_queries
 from src.prompts import RESEARCH_SYSTEM_PROMPT
 from src.llm import LLMClient
+from src.simulation import SimulationProvider
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,12 @@ class ResearchAgent:
         t = inp.topic.strip()
         # Clean leading question phrases to prevent dictionary definition results
         cleaned = re.sub(r"^(why are|why do|why is|how to|what is|why)\s+", "", t, flags=re.IGNORECASE).rstrip("?")
-        queries = [
+        return [
             f"{cleaned} statistics facts data",
             f"{cleaned} common mistakes reasons",
             f"{cleaned} guide best practices",
             f"{cleaned} case study industry benchmark",
         ]
-        return queries
 
     def execute(self, inp: ScriptInput) -> ResearchResult:
         """Run web searches, extract verified facts, and pick content angle."""
@@ -54,84 +54,13 @@ LIVE SEARCH RESULTS:
 Please analyze these search results and output the research summary JSON strictly following the system prompt rules.
 """
 
-        # Provide a reliable fallback if running in simulation mode or API offline
-        def create_simulation_fallback() -> Dict[str, Any]:
-            findings = []
-            sources = []
-            for item in raw_results[:4]:
-                url = item.get("url", "")
-                title = item.get("title", "")
-                snip = item.get("snippet", "")
-                if url:
-                    findings.append(f"{title}: {snip[:120]}...")
-                    sources.append({
-                        "url": url,
-                        "title": title,
-                        "claim_supported": snip[:100],
-                        "is_verified": True,
-                    })
-
-            if not findings:
-                findings = [
-                    "82% of small business websites fail to generate leads due to lack of clear value proposition and CTA.",
-                    "Slow page load speeds cause over 53% of mobile visitors to bounce before seeing any offer.",
-                    "Websites lacking mobile responsiveness experience a 60% drop in inquiry submissions.",
-                ]
-                sources = [
-                    {
-                        "url": "https://www.hubspot.com/marketing-statistics",
-                        "title": "HubSpot Marketing Benchmark Data",
-                        "claim_supported": "Website conversion drop-offs on unoptimized mobile sites",
-                        "is_verified": True,
-                    }
-                ]
-
-            topic_lower = inp.topic.lower()
-            if "seo" in topic_lower:
-                pain_points = [
-                    "Investing time and money in SEO for months with zero noticeable rise in sales or calls.",
-                    "Falling victim to spam backlink packages and keyword stuffing that trigger Google penalties.",
-                    "Neglecting local search profile while wasting budget on hyper-competitive global keywords.",
-                ]
-                angle = "3 outdated SEO hacks small businesses must drop immediately to avoid Google penalties."
-                reason = "Focuses on preventing business owners from losing existing ranking authority and wasting marketing budget."
-            elif "germany" in topic_lower or "visa" in topic_lower:
-                pain_points = [
-                    "Confused by conflicting eligibility criteria, blocked account costs, and language requirements.",
-                    "Fear of visa rejection due to non-recognized degrees or incomplete documentation.",
-                    "Uncertainty about the Chancenkarte points system calculation and local job market demand.",
-                ]
-                angle = "A step-by-step verified breakdown of the 6-point eligibility criteria for Germany's Opportunity Card."
-                reason = "Dispels viral misinformation and provides a clear, official checklist for aspiring applicants."
-            else:
-                pain_points = [
-                    "Spending money on website development and driving traffic with zero client inquiries.",
-                    "Visitors leave within 5 seconds without clicking, calling, or reading the offer.",
-                    "Confused visitors who cannot tell what service the business provides or how to buy.",
-                ]
-                angle = "The 3 hidden website friction points that kill customer trust and how to fix them."
-                reason = "Directly tackles the owner's immediate frustration of wasted ad and website development investment."
-
-            return {
-                "key_findings": findings[:4],
-                "pain_points": pain_points,
-                "chosen_angle": angle,
-                "angle_reason": reason,
-                "sources": sources,
-                "uncertainties": (
-                    ["Visa and immigration rules change frequently; verify official government portal (make-it-in-germany.com)."]
-                    if "visa" in topic_lower or "germany" in topic_lower
-                    else []
-                ),
-            }
-
+        fallback = SimulationProvider.get_research_fallback(inp, raw_results)
         data = self.llm.generate_json(
             system_prompt=RESEARCH_SYSTEM_PROMPT,
             user_prompt=user_prompt,
-            default_fallback=create_simulation_fallback(),
+            default_fallback=fallback,
         )
 
-        # Parse into typed models
         source_items = [
             SourceItem(
                 url=s.get("url", ""),

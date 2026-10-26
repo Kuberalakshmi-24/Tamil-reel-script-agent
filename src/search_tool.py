@@ -17,11 +17,12 @@ def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
     """
     results = []
     try:
-        from duckduckgo_search import DDGS
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            from duckduckgo_search import DDGS
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            ddgs = DDGS()
+        ddgs = DDGS()
         raw_results = list(ddgs.text(query, max_results=max_results))
         for item in raw_results:
             url = item.get("href") or item.get("link") or ""
