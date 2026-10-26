@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def clean_json_response(raw_text: str) -> Dict[str, Any]:
-    """Clean markdown code fences and parse JSON safely using non-greedy extraction."""
+    """Clean markdown code fences and parse JSON safely."""
     text = raw_text.strip()
 
     # 1. Direct parse attempt
@@ -28,20 +28,30 @@ def clean_json_response(raw_text: str) -> Dict[str, Any]:
     except json.JSONDecodeError:
         pass
 
-    # 2. Extract ```json ... ``` code fence (non-greedy)
-    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if match:
+    # 2. Extract content within ```json ... ``` or ``` ... ``` code fence
+    fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+    if fence_match:
+        fence_content = fence_match.group(1).strip()
         try:
-            return json.loads(match.group(1))
+            return json.loads(fence_content)
         except json.JSONDecodeError:
-            pass
+            text = fence_content  # Fall through to brace extraction on fence content
 
-    # 3. Fallback: extract from first { to last }
+    # 3. Robust substring extraction: outermost { to outermost }
     first_brace = text.find("{")
     last_brace = text.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
         try:
             return json.loads(text[first_brace : last_brace + 1])
+        except json.JSONDecodeError:
+            pass
+
+    # 4. Fallback for array root if applicable
+    first_bracket = text.find("[")
+    last_bracket = text.rfind("]")
+    if first_bracket != -1 and last_bracket != -1 and last_bracket > first_bracket:
+        try:
+            return json.loads(text[first_bracket : last_bracket + 1])
         except json.JSONDecodeError:
             pass
 
@@ -106,7 +116,7 @@ class LLMClient:
             try:
                 combined_prompt = f"{system_prompt}\n\nUSER REQUEST:\n{user_prompt}\n\nOutput strictly valid JSON only."
                 if hasattr(self.gemini_client, "models"):  # google-genai SDK
-                    model_name = GEMINI_MODEL or "gemini-3.5-flash"
+                    model_name = GEMINI_MODEL or "gemini-1.5-flash"
                     response = self.gemini_client.models.generate_content(
                         model=model_name,
                         contents=combined_prompt,

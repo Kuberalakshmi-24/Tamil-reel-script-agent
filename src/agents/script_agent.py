@@ -6,6 +6,7 @@ from src.models import (
     ResearchResult,
     ScriptDraft,
     HookItem,
+    CtaOptionItem,
 )
 from src.config import WORD_COUNT_LIMITS
 from src.prompts import (
@@ -84,7 +85,6 @@ Write the script following all duration, pacing, and tone rules strictly. Ensure
             hashtags=data.get("hashtags", []),
             estimated_duration=data.get("estimated_duration", f"{inp.duration} sec"),
         )
-        draft.word_count = draft.calculate_word_count()
         return draft
 
     def regenerate_hooks(self, inp: ScriptInput, draft: ScriptDraft) -> ScriptDraft:
@@ -117,7 +117,6 @@ Generate 3 brand new punchy hooks (question, bold statement, pain-point), max 12
         updated_draft = draft.model_copy(deep=True)
         updated_draft.hooks = new_hooks
         updated_draft.hook = rec_text
-        updated_draft.word_count = updated_draft.calculate_word_count()
         return updated_draft
 
     def regenerate_cta(self, inp: ScriptInput, draft: ScriptDraft) -> ScriptDraft:
@@ -135,8 +134,20 @@ Generate 3 NEW specific, non-vague CTA options matching the objective."""
             default_fallback=fallback,
         )
 
-        rec_cta = data.get("recommended_cta", draft.cta)
+        cta_options_raw = data.get("cta_options", [])
+        cta_items = [
+            CtaOptionItem(
+                text=c.get("text", ""),
+                is_recommended=c.get("is_recommended", False),
+                reason=c.get("reason", ""),
+            )
+            for c in cta_options_raw
+            if c.get("text")
+        ]
+        rec_cta = data.get("recommended_cta") or (cta_items[0].text if cta_items else draft.cta)
+
         updated_draft = draft.model_copy(deep=True)
         updated_draft.cta = rec_cta
-        updated_draft.word_count = updated_draft.calculate_word_count()
+        if cta_items:
+            updated_draft.cta_options = cta_items
         return updated_draft

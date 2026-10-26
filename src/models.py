@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from typing import List, Optional, Literal, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from src.config import (
     DEFAULT_PLATFORM,
     DEFAULT_DURATION,
@@ -13,15 +13,15 @@ from src.config import (
 
 
 class ScriptInput(BaseModel):
-    """Input payload for generating or modifying a script."""
-    topic: str
-    audience: Optional[str] = None
-    niche: Optional[str] = None
-    platform: str = DEFAULT_PLATFORM
-    duration: int = DEFAULT_DURATION
-    tone: str = DEFAULT_TONE
-    objective: str = DEFAULT_OBJECTIVE
-    mode: Literal["full_script", "regenerate_hook", "regenerate_cta"] = DEFAULT_MODE
+    """Validated input payload for script generation."""
+    topic: str = Field(..., min_length=3, max_length=300, description="Primary topic for the reel")
+    audience: Optional[str] = Field(default=None, max_length=150, description="Target demographic")
+    niche: Optional[str] = Field(default=None, max_length=100, description="Industry domain")
+    platform: str = Field(default=DEFAULT_PLATFORM, max_length=50)
+    duration: Literal[30, 45, 60] = Field(default=30, description="Target video duration in seconds")
+    tone: Literal["Tanglish", "conversational spoken Tamil", "Tamil"] = Field(default="Tanglish")
+    objective: str = Field(default=DEFAULT_OBJECTIVE, max_length=120)
+    mode: Literal["full_script", "regenerate_hook", "regenerate_cta"] = Field(default="full_script")
     assumed_defaults: List[str] = Field(default_factory=list)
 
     @classmethod
@@ -46,7 +46,7 @@ class ScriptInput(BaseModel):
         if not duration:
             assumed.append(f"duration = {DEFAULT_DURATION}s")
 
-        final_tone = tone or DEFAULT_TONE
+        final_tone = tone if tone in ("Tanglish", "conversational spoken Tamil", "Tamil") else DEFAULT_TONE
         if not tone:
             assumed.append(f"tone = {DEFAULT_TONE}")
 
@@ -54,7 +54,7 @@ class ScriptInput(BaseModel):
         if not objective:
             assumed.append(f"objective = {DEFAULT_OBJECTIVE}")
 
-        final_mode = mode or DEFAULT_MODE
+        final_mode = mode if mode in ("full_script", "regenerate_hook", "regenerate_cta") else DEFAULT_MODE
 
         return cls(
             topic=topic,
@@ -95,6 +95,12 @@ class HookItem(BaseModel):
     reason: str = ""
 
 
+class CtaOptionItem(BaseModel):
+    text: str
+    is_recommended: bool = False
+    reason: str = ""
+
+
 class ScriptDraft(BaseModel):
     """Output from Step 2: Hooks, Script segments, and Production Notes."""
     hooks: List[HookItem] = Field(default_factory=list)
@@ -103,11 +109,24 @@ class ScriptDraft(BaseModel):
     body_points: List[str] = Field(default_factory=list)
     engagement: str = ""
     cta: str = ""
-    word_count: int = 0
+    cta_options: List[CtaOptionItem] = Field(default_factory=list)
     on_screen_texts: List[str] = Field(default_factory=list)
     caption: str = ""
     hashtags: List[str] = Field(default_factory=list)
     estimated_duration: str = ""
+
+    @computed_field
+    @property
+    def word_count(self) -> int:
+        """Pure spoken words across all script segments, excluding bullet numbering."""
+        cleaned_points = [re.sub(r"^\d+[\.\)]\s*", "", p) for p in self.body_points]
+        raw_text = f"{self.hook} {self.context} {' '.join(cleaned_points)} {self.engagement} {self.cta}"
+        tokens = re.findall(r"\b[\w\-']+\b", raw_text, flags=re.UNICODE)
+        return len(tokens)
+
+    def calculate_word_count(self) -> int:
+        """Backwards compatibility helper returning the computed word count."""
+        return self.word_count
 
     def get_full_script_text(self) -> str:
         """Combine labeled script parts into full spoken text."""
@@ -120,15 +139,6 @@ class ScriptDraft(BaseModel):
             f"[CTA] {self.cta}",
         ]
         return "\n".join(parts)
-
-    def calculate_word_count(self) -> int:
-        """Calculate pure spoken words across all script segments, excluding bullet numbers."""
-        # Strip leading numbers like '1. ', '2. '
-        cleaned_points = [re.sub(r"^\d+[\.\)]\s*", "", p) for p in self.body_points]
-        raw_text = f"{self.hook} {self.context} {' '.join(cleaned_points)} {self.engagement} {self.cta}"
-        # Extract unicode words (handles both Latin Tanglish and Tamil Unicode)
-        tokens = re.findall(r"\b[\w\-']+\b", raw_text, flags=re.UNICODE)
-        return len(tokens)
 
 
 class CheckItem(BaseModel):
@@ -144,6 +154,20 @@ class QualityCheckResult(BaseModel):
     unnatural_tamil: CheckItem
     duration_fit: CheckItem
     fixes_applied: List[str] = Field(default_factory=list)
+
+    @property
+    def overall_passed(self) -> bool:
+        """Returns True if all 5 quality audit criteria have PASS status."""
+        return all(
+            item.status == "PASS"
+            for item in (
+                self.unsupported_claims,
+                self.repetition,
+                self.weak_cta,
+                self.unnatural_tamil,
+                self.duration_fit,
+            )
+        )
 
 
 class FullDeliverable(BaseModel):
@@ -201,6 +225,14 @@ class FullDeliverable(BaseModel):
         lines.append("")
         lines.append(f"**[Engagement]**\n{self.script.engagement}\n")
         lines.append(f"**[CTA]**\n{self.script.cta}\n")
+        if self.script.cta_options:
+            lines.append("### Alternative CTA Options:")
+            for idx, c_opt in enumerate(self.script.cta_options, 1):
+                c_badge = " **[RECOMMENDED]**" if c_opt.is_recommended else ""
+                lines.append(f"{idx}. \"{c_opt.text}\"{c_badge}")
+                if c_opt.reason:
+                    lines.append(f"   - *Reason:* {c_opt.reason}")
+            lines.append("")
 
         # Section 5: Production Notes
         lines.append("## 5. Production Notes")

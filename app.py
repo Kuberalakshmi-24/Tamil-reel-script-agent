@@ -110,7 +110,6 @@ st.markdown(
 
 # --- PRESET SAMPLES ---
 PRESETS = {
-    "Select a preset topic (Optional)...": None,
     "Topic 1: Why websites fail to get leads (30s, Tanglish)": {
         "topic": "Why are businesses not getting leads from their websites?",
         "duration": 30,
@@ -141,9 +140,18 @@ PRESETS = {
 with st.sidebar:
     st.header("⚙️ Script Generator")
 
-    chosen_preset = st.selectbox("Quick Presets", options=list(PRESETS.keys()), index=0)
+    mode_choice = st.radio(
+        "Creation Mode",
+        options=["✍️ Custom Topic (Any Niche)", "🧪 Test Assignment Presets (3 Samples)"],
+        index=0,
+    )
 
-    if chosen_preset and PRESETS[chosen_preset]:
+    if mode_choice == "🧪 Test Assignment Presets (3 Samples)":
+        chosen_preset = st.selectbox(
+            "Select Sample Preset",
+            options=list(PRESETS.keys()),
+            index=0,
+        )
         preset_data = PRESETS[chosen_preset]
         default_topic = preset_data["topic"]
         default_duration = preset_data["duration"]
@@ -151,18 +159,20 @@ with st.sidebar:
         default_objective = preset_data["objective"]
         default_audience = preset_data["audience"]
         default_niche = preset_data["niche"]
+        topic_placeholder = ""
     else:
-        default_topic = "Why are businesses not getting leads from their websites?"
+        default_topic = ""
         default_duration = 30
         default_tone = "Tanglish"
         default_objective = "Get agency leads"
-        default_audience = "Small business owners"
-        default_niche = "Digital Marketing / Web"
+        default_audience = "Small business owners & Tamil entrepreneurs"
+        default_niche = "Business & Technology"
+        topic_placeholder = "e.g., Why your Instagram reels get zero sales, or How to start a small cloud kitchen in Chennai..."
 
     topic = st.text_area(
         "Primary Video Topic *",
         value=default_topic,
-        placeholder="Enter your topic in English, Tamil, or Tanglish...",
+        placeholder=topic_placeholder or "Enter your topic in English, Tamil, or Tanglish...",
         height=90,
     )
 
@@ -272,10 +282,14 @@ if deliverable:
         with c_h1:
             if st.button("⚡ Regenerate 3 Fresh Hooks", use_container_width=True):
                 with st.spinner("Generating 3 new hooks..."):
-                    updated_inp = deliverable.input_data.model_copy(deep=True)
-                    updated_inp.mode = "regenerate_hook"
-                    st.session_state.deliverable = pipeline.run(updated_inp, previous_deliverable=deliverable)
-                    st.rerun()
+                    try:
+                        updated_inp = deliverable.input_data.model_copy(deep=True)
+                        updated_inp.mode = "regenerate_hook"
+                        st.session_state.deliverable = pipeline.run(updated_inp, previous_deliverable=deliverable)
+                        st.toast("✅ 3 Fresh Hooks generated successfully!", icon="🎣")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to regenerate hooks: {e}")
         with c_h2:
             st.caption("Re-generates fresh hooks instantly while preserving the body and verified research.")
 
@@ -296,6 +310,14 @@ if deliverable:
         st.markdown(f"**[Engagement Question]**\n<div class='script-block'>{deliverable.script.engagement}</div>", unsafe_allow_html=True)
         st.markdown(f"**[Call To Action (CTA)]**\n<div class='script-block'><strong>{deliverable.script.cta}</strong></div>", unsafe_allow_html=True)
 
+        if deliverable.script.cta_options:
+            st.markdown("**Alternative CTA Options Generated:**")
+            for c_opt in deliverable.script.cta_options:
+                rec_badge = "⭐ **[RECOMMENDED]**" if c_opt.is_recommended else ""
+                st.markdown(f"- **{c_opt.type.title()}**: {c_opt.text} {rec_badge}")
+                if c_opt.reason:
+                    st.caption(f"  *Strategic Reason:* {c_opt.reason}")
+
         # CTA Regeneration
         st.divider()
         st.subheader("🎯 Regenerate Call To Action (CTA)")
@@ -311,12 +333,16 @@ if deliverable:
             st.write("")
             if st.button("🎯 Regenerate CTA Options", use_container_width=True):
                 with st.spinner("Regenerating CTA matching objective..."):
-                    updated_inp = deliverable.input_data.model_copy(deep=True)
-                    if new_cta_obj.strip():
-                        updated_inp.objective = new_cta_obj.strip()
-                    updated_inp.mode = "regenerate_cta"
-                    st.session_state.deliverable = pipeline.run(updated_inp, previous_deliverable=deliverable)
-                    st.rerun()
+                    try:
+                        updated_inp = deliverable.input_data.model_copy(deep=True)
+                        if new_cta_obj.strip():
+                            updated_inp.objective = new_cta_obj.strip()
+                        updated_inp.mode = "regenerate_cta"
+                        st.session_state.deliverable = pipeline.run(updated_inp, previous_deliverable=deliverable)
+                        st.toast("✅ CTA options regenerated successfully!", icon="🎯")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to regenerate CTA: {e}")
 
         st.divider()
         st.subheader("🎥 Production Notes")

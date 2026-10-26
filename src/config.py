@@ -30,7 +30,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
 DELIVERABLES_DIR = ROOT_DIR / "deliverables"
 DELIVERABLES_DIR.mkdir(parents=True, exist_ok=True)

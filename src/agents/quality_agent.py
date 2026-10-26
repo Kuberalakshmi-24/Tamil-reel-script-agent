@@ -68,7 +68,20 @@ Perform the 5-point quality audit. If any criteria is flagged, you MUST provide 
         updated_draft = draft.model_copy(deep=True)
         if revised and isinstance(revised, dict):
             if revised.get("hook"):
-                updated_draft.hook = revised["hook"]
+                revised_hook_text = revised["hook"].strip()
+                updated_draft.hook = revised_hook_text
+                # Synchronize the recommended hook in the hooks list
+                found_rec = False
+                for h in updated_draft.hooks:
+                    if h.is_recommended:
+                        h.text = revised_hook_text
+                        h.reason = "Revised by Quality Auditor for tone/duration compliance."
+                        found_rec = True
+                        break
+                if not found_rec and updated_draft.hooks:
+                    updated_draft.hooks[0].text = revised_hook_text
+                    updated_draft.hooks[0].is_recommended = True
+
             if revised.get("context"):
                 updated_draft.context = revised["context"]
             if revised.get("body_points"):
@@ -77,8 +90,6 @@ Perform the 5-point quality audit. If any criteria is flagged, you MUST provide 
                 updated_draft.engagement = revised["engagement"]
             if revised.get("cta"):
                 updated_draft.cta = revised["cta"]
-
-        updated_draft.word_count = updated_draft.calculate_word_count()
 
         qc_result = QualityCheckResult(
             unsupported_claims=CheckItem(

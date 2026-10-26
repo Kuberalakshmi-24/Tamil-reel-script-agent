@@ -21,8 +21,8 @@ app = FastAPI(
 # Enable CORS for frontend clients (React, Next.js, Vite, mobile apps, etc.)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust to specific domains in production (e.g. ["http://localhost:3000"])
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
