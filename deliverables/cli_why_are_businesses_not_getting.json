@@ -1,0 +1,132 @@
+{
+  "input_data": {
+    "topic": "Why are businesses not getting leads from their websites?",
+    "audience": "General Tamil content audience",
+    "niche": "Business / Digital / Career",
+    "platform": "Instagram Reels",
+    "duration": 30,
+    "tone": "Tanglish",
+    "objective": "awareness",
+    "mode": "full_script",
+    "assumed_defaults": [
+      "platform = Instagram Reels"
+    ]
+  },
+  "research": {
+    "topic": "Why are businesses not getting leads from their websites?",
+    "queries_run": [
+      "businesses not getting leads from their websites statistics facts data",
+      "businesses not getting leads from their websites common mistakes reasons",
+      "businesses not getting leads from their websites guide best practices",
+      "businesses not getting leads from their websites case study industry benchmark"
+    ],
+    "key_findings": [
+      "96% of website visitors are not ready to buy on their first visit, meaning hard-sell pages fail to convert cold traffic.",
+      "80% of new leads generated never convert into a sale, highlighting a breakdown in lead nurturing and friction during the conversion process.",
+      "Websites frequently attract visitors but fail to generate enquiries due to hidden Call-to-Actions (CTAs), weak trust signals, poor user experience (UX), and unclear messaging."
+    ],
+    "pain_points": [
+      "Spending money on ads or SEO traffic but receiving zero or very low form submissions and customer enquiries.",
+      "Confusion over whether lead generation failure stems from bad design, lack of SEO, or ineffective copywriting.",
+      "Treating the website as a static digital brochure rather than a designed lead capture funnel."
+    ],
+    "chosen_angle": "Shift from 'Brochure Website' to 'Lead Engine': Fixing the 3 Hidden Friction Points Blocking Conversions",
+    "angle_reason": "Directly targets business owners who waste ad spend bringing traffic to a site that lacks clear CTAs, trust signals, and nurturing hooks, giving them immediate actionable clarity.",
+    "sources": [
+      {
+        "url": "https://www.sci-tech-today.com/stats/lead-generation-statistics/",
+        "title": "Lead Generation Statistics By Facts And Trend (2026)",
+        "claim_supported": "96% of website visitors are not ready to buy on their first visit and 80% of new leads never convert into a sale.",
+        "is_verified": true
+      },
+      {
+        "url": "https://navigotechsolutions.com/blog/why-is-my-website-not-getting-leads.html",
+        "title": "Why Is My Website Not Getting Leads? 7 Fixes That Double ...",
+        "claim_supported": "Hidden CTAs, friction, and weak SEO are major reasons websites fail to get leads.",
+        "is_verified": true
+      },
+      {
+        "url": "https://www.alfdesigngroup.com/post/why-website-not-generating-leads",
+        "title": "Why Is My Website Not Generating Leads? (2026 Guide)",
+        "claim_supported": "Getting traffic without enquiries happens because UX, messaging, trust signals, and CTAs negatively impact conversions.",
+        "is_verified": true
+      }
+    ],
+    "uncertainties": []
+  },
+  "script": {
+    "hooks": [
+      {
+        "text": "Website-ku traffic varudhu, aana single lead kuda varalaiyaa?",
+        "type": "question",
+        "is_recommended": true,
+        "reason": "Revised by Quality Auditor for tone/duration compliance."
+      },
+      {
+        "text": "Unga website oru digital brochure dhaan, lead engine kedaiyaadhu!",
+        "type": "bold statement",
+        "is_recommended": false,
+        "reason": ""
+      },
+      {
+        "text": "Ads-ku selavu panniyum website-la irundhu enquiries-e varama irukka?",
+        "type": "pain-point",
+        "is_recommended": false,
+        "reason": ""
+      }
+    ],
+    "hook": "Website-ku traffic varudhu, aana single lead kuda varalaiyaa?",
+    "context": "Unga website-a brochure-a vechaa leads varaadhu, lead engine-a maathanum.",
+    "body_points": [
+      "First, hidden CTAs. Contact form-a kanla padura madhiri mela vaiyunga.",
+      "Second, zero trust. Customer reviews-um proofs-um kandippa irukkanum.",
+      "Third, hard selling. Direct-a sale pannama, value thandhu lead capture pannunga."
+    ],
+    "engagement": "Unga website-la indha mistakes irukkaa-nu check panni sollunga!",
+    "cta": "Free website audit venumna, bio link-a click pannunga!",
+    "cta_options": [],
+    "on_screen_texts": [
+      "No Leads From Website?",
+      "1. Hidden CTAs",
+      "2. No Trust Signals",
+      "3. Hard Selling",
+      "Get Free Website Audit"
+    ],
+    "caption": "Why is your website not generating leads? Convert your static website into a lead engine by fixing these 3 friction points! 🔥",
+    "hashtags": [
+      "#tamilbusiness",
+      "#leadgeneration",
+      "#digitalmarketingtamil",
+      "#websitegrowth",
+      "#businessgrowth"
+    ],
+    "estimated_duration": "30 sec",
+    "word_count": 62
+  },
+  "quality_check": {
+    "unsupported_claims": {
+      "status": "PASS",
+      "notes": "All points regarding hidden CTAs, lack of trust signals, and hard selling align with provided research."
+    },
+    "repetition": {
+      "status": "PASS",
+      "notes": "Information flows logically with distinct points and no redundant phrasing."
+    },
+    "weak_cta": {
+      "status": "PASS",
+      "notes": "CTA is actionable, clear, and provides a logical next step."
+    },
+    "unnatural_tamil": {
+      "status": "FLAG",
+      "notes": "Contains bookish Tamil word 'matrum' and dialect slang 'vechundaa', which sound unnatural in standard spoken Tanglish."
+    },
+    "duration_fit": {
+      "status": "PASS",
+      "notes": "Script word count is 62 words, strictly within the 60-75 word range for 30s."
+    },
+    "fixes_applied": [
+      "Replaced formal/bookish word 'matrum' with natural Tanglish suffix phrasing ('reviews-um proofs-um').",
+      "Replaced dialect-specific word 'vechundaa' with standard spoken Tanglish 'vechaa' for standard conversational flow."
+    ]
+  }
+}

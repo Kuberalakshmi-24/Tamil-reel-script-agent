@@ -77,7 +77,7 @@ class LLMClient:
                 try:
                     import google.generativeai as genai
                     genai.configure(api_key=GEMINI_API_KEY)
-                    self.gemini_client = genai.GenerativeModel("gemini-1.5-flash")
+                    self.gemini_client = genai.GenerativeModel(GEMINI_MODEL or "gemini-3.8-flash")
                     self.provider = "gemini"
                 except Exception as e:
                     logger.warning(f"Could not initialize Gemini: {e}")
@@ -113,30 +113,52 @@ class LLMClient:
     ) -> Dict[str, Any]:
         """Invoke LLM and return parsed JSON object."""
         if self.provider == "gemini" and self.gemini_client:
-            try:
-                combined_prompt = f"{system_prompt}\n\nUSER REQUEST:\n{user_prompt}\n\nOutput strictly valid JSON only."
-                if hasattr(self.gemini_client, "models"):  # google-genai SDK
-                    model_name = GEMINI_MODEL or "gemini-1.5-flash"
-                    response = self.gemini_client.models.generate_content(
-                        model=model_name,
-                        contents=combined_prompt,
-                    )
-                    return clean_json_response(response.text)
-                else:  # google.generativeai legacy SDK
-                    response = self.gemini_client.generate_content(combined_prompt)
-                    return clean_json_response(response.text)
-            except Exception as e:
-                err_str = str(e)
-                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                    logger.warning("Gemini Free Tier daily limit reached (20 req/day). Using calibrated generator fallback.")
-                elif "503" in err_str or "UNAVAILABLE" in err_str:
-                    logger.warning("Gemini model temporarily busy (503). Using calibrated generator fallback.")
-                else:
-                    logger.error(f"Gemini API call failed: {e}")
+            combined_prompt = f"{system_prompt}\n\nUSER REQUEST:\n{user_prompt}\n\nOutput strictly valid JSON only."
+            candidate_models = [
+                GEMINI_MODEL,
+                "gemini-3.8-flash",
+                "gemini-3.6-flash",
+                "gemini-3.5-flash-lite",
+                "gemini-3.1-flash-lite",
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
+                "gemma-4",
+            ]
+            seen_models = set()
+            models_to_try = [m for m in candidate_models if m and not (m in seen_models or seen_models.add(m))]
 
-                if default_fallback:
-                    return default_fallback
-                raise
+            last_error = None
+            for model_name in models_to_try:
+                try:
+                    if hasattr(self.gemini_client, "models"):  # google-genai SDK
+                        response = self.gemini_client.models.generate_content(
+                            model=model_name,
+                            contents=combined_prompt,
+                        )
+                        return clean_json_response(response.text)
+                    else:  # google.generativeai legacy SDK
+                        response = self.gemini_client.generate_content(combined_prompt)
+                        return clean_json_response(response.text)
+                except Exception as e:
+                    last_error = e
+                    err_str = str(e)
+                    if "404" in err_str or "NOT_FOUND" in err_str:
+                        continue
+                    elif "503" in err_str or "UNAVAILABLE" in err_str:
+                        logger.warning(f"Model {model_name} temporarily busy (503). Trying alternative model...")
+                        continue
+                    elif "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                        logger.warning(f"Model {model_name} rate limited (429). Trying alternative model...")
+                        continue
+                    else:
+                        continue
+
+            if last_error:
+                logger.error(f"Gemini API call failed: {last_error}")
+            if default_fallback:
+                return default_fallback
+            if last_error:
+                raise last_error
 
         elif self.provider == "anthropic" and self.anthropic_client:
             try:

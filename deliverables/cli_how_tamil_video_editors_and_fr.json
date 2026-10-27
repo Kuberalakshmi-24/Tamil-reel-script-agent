@@ -1,0 +1,139 @@
+{
+  "input_data": {
+    "topic": "How Tamil video editors and freelancers can find international clients on LinkedIn",
+    "audience": "General Tamil content audience",
+    "niche": "Business / Digital / Career",
+    "platform": "Instagram Reels",
+    "duration": 45,
+    "tone": "Tanglish",
+    "objective": "book consultation",
+    "mode": "full_script",
+    "assumed_defaults": [
+      "platform = Instagram Reels"
+    ]
+  },
+  "research": {
+    "topic": "How Tamil video editors and freelancers can find international clients on LinkedIn",
+    "queries_run": [
+      "How Tamil video editors and freelancers can find international clients on LinkedIn statistics facts data",
+      "How Tamil video editors and freelancers can find international clients on LinkedIn common mistakes reasons",
+      "How Tamil video editors and freelancers can find international clients on LinkedIn guide best practices",
+      "How Tamil video editors and freelancers can find international clients on LinkedIn case study industry benchmark"
+    ],
+    "key_findings": [
+      "Securing international video editing clients requires focused proof, targeted direct outreach, time-zone planning, and offering paid pilots to build client trust.",
+      "Utilizing LinkedIn for networking, optimization, professional portfolio display, and proposals is a primary strategy for video editors looking to expand globally.",
+      "Indian freelancers must master international invoicing, contract structures, and international payment setups to reliably work with foreign clients."
+    ],
+    "pain_points": [
+      "Lack of response or conversion when pitching international clients on platforms like LinkedIn.",
+      "Uncertainty around handling international payment collection, invoicing, and contract enforcement from India.",
+      "Difficulty proving credibility and portfolio value to foreign clients without local references."
+    ],
+    "chosen_angle": "The 'Paid Pilot' LinkedIn Outreach System: How Tamil Video Editors Can Pitch and Win Foreign Clients",
+    "angle_reason": "Instead of generic advice on optimizing LinkedIn profiles, this angle offers a high-converting tactical strategy (offering paid pilots and targeted proof) that directly addresses low client trust.",
+    "sources": [
+      {
+        "url": "https://www.gigxomi.com/blog/how-to-get-international-video-editing-clients",
+        "title": "How to Get International Video Editing Clients",
+        "claim_supported": "Winning international video editing clients requires focused proof, targeted direct outreach, time-zone planning, and paid pilots.",
+        "is_verified": true
+      },
+      {
+        "url": "https://www.linkedin.com/advice/1/how-do-you-find-new-clients-video-editor-skills-video-editing",
+        "title": "How to Find New Clients as a Video Editor",
+        "claim_supported": "Finding video editing clients on LinkedIn relies on portfolio presentation, networking, targeted outreach, and strong proposal skills.",
+        "is_verified": true
+      },
+      {
+        "url": "https://earnfromhomeindia.com/en/get-international-clients/",
+        "title": "How to Get International Clients as an Indian Freelancer",
+        "claim_supported": "Indian freelancers need strategic online presence, networking, and mastered invoicing/payment practices to succeed internationally.",
+        "is_verified": true
+      }
+    ],
+    "uncertainties": [
+      "Specific legal requirements, foreign exchange compliance (FIRC), and tax implications for receiving international client payments in India should be verified on official regulatory portals."
+    ]
+  },
+  "script": {
+    "hooks": [
+      {
+        "text": "LinkedIn-la foreign clients-ku DM anuppi reply-e varalya?",
+        "type": "question",
+        "is_recommended": false,
+        "reason": ""
+      },
+      {
+        "text": "High-paying foreign video editing clients-a LinkedIn-la attract panna idho oru practical strategy!",
+        "type": "bold statement",
+        "is_recommended": true,
+        "reason": "Revised by Quality Auditor for tone/duration compliance."
+      },
+      {
+        "text": "Good editing skill irundhum low local pay-la struggle panringala?",
+        "type": "pain-point",
+        "is_recommended": false,
+        "reason": ""
+      }
+    ],
+    "hook": "High-paying foreign video editing clients-a LinkedIn-la attract panna idho oru practical strategy!",
+    "context": "Local clients kitta kammi pay-ku work panni tired aagiteengala? International creators-a direct-a reach panni nalla revenue generate pannalaam.",
+    "body_points": [
+      "First, unga LinkedIn profile-la international creators-kaga optimize panna video portfolio-va highlight pannunga.",
+      "Next, cold outreach panrappo free work-ku badhila one-minute paid pilot proposal offer pannunga.",
+      "Trust build aana udaney, Wise illana Payoneer moolama international contract and invoice setup pannunga."
+    ],
+    "engagement": "Neenga idhu varaikum LinkedIn moolama international clients-ku pitch panni irukkeengala?",
+    "cta": "Global video editing clients-a convert panna personalized roadmap-ku, bio link-a click panni 1-on-1 consultation ippove book pannunga!",
+    "cta_options": [],
+    "on_screen_texts": [
+      "Win High-Paying US Clients",
+      "Stop Working For Low Pay!",
+      "1. Optimize LinkedIn Portfolio",
+      "2. Pitch Paid Pilots (Not Free)",
+      "3. Wise/Payoneer Invoicing",
+      "Book 1-on-1 Consultation Now!"
+    ],
+    "caption": "Tired of low-paying local projects? 🚀 Here is how Tamil video editors can leverage LinkedIn to land international clients using the Paid Pilot strategy. Book a 1-on-1 consultation to get your personalized client acquisition roadmap! 📩",
+    "hashtags": [
+      "#VideoEditing",
+      "#FreelanceTamil",
+      "#LinkedInTips",
+      "#VideoEditor",
+      "#TamilFreelancers",
+      "#RemoteWork",
+      "#VGDigitalFalcon"
+    ],
+    "estimated_duration": "45 sec",
+    "word_count": 96
+  },
+  "quality_check": {
+    "unsupported_claims": {
+      "status": "PASS",
+      "notes": "Replaced hyperbolic 'best trick' with realistic positioning supported by client acquisition research."
+    },
+    "repetition": {
+      "status": "PASS",
+      "notes": "Removed repetitive phrasing in engagement ('pitch panni try panni' streamlined to 'pitch panni irukkeengala')."
+    },
+    "weak_cta": {
+      "status": "PASS",
+      "notes": "CTA delivers a clear value proposition aligned with booking a 1-on-1 consultation."
+    },
+    "unnatural_tamil": {
+      "status": "PASS",
+      "notes": "Fixed unnatural typo/phrasing ('tharenyaama') to smooth, conversational Tanglish."
+    },
+    "duration_fit": {
+      "status": "PASS",
+      "notes": "Revised word count is 96 words, fitting the 45s target range of 95-110 words."
+    },
+    "fixes_applied": [
+      "Modified hook from 'best trick' to 'practical strategy' to eliminate unsubstantiated absolute claims.",
+      "Corrected unnatural typo and awkward phrasing in Body Point 2 from 'free work panni tharenyaama' to 'free work-ku badhila one-minute paid pilot proposal offer pannunga'.",
+      "Eliminated duplicate verb repetition in engagement question ('pitch panni try panni' -> 'pitch panni irukkeengala').",
+      "Balanced overall script pacing and length to 96 words, meeting the strict 45-second duration requirement (95-110 words)."
+    ]
+  }
+}

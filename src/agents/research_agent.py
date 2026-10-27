@@ -21,13 +21,15 @@ class ResearchAgent:
     def _generate_search_queries(self, inp: ScriptInput) -> List[str]:
         """Generate 3-5 targeted search queries for reputable sources."""
         t = inp.topic.strip()
-        # Clean leading question phrases to prevent dictionary definition results
-        cleaned = re.sub(r"^(why are|why do|why is|how to|what is|why)\s+", "", t, flags=re.IGNORECASE).rstrip("?")
+        # Clean leading question phrases to prevent over-constrained query syntax
+        cleaned = re.sub(r"^(why are|why do|why is|how to|what is|why|is|should|can|are)\s+", "", t, flags=re.IGNORECASE).rstrip("?")
+        # Keep core query focused (first 8 words max) to avoid search engine misses
+        words = cleaned.split()
+        core_query = " ".join(words[:8]) if len(words) > 8 else cleaned
         return [
-            f"{cleaned} statistics facts data",
-            f"{cleaned} common mistakes reasons",
-            f"{cleaned} guide best practices",
-            f"{cleaned} case study industry benchmark",
+            f"{core_query} facts data",
+            f"{core_query} pros cons comparison",
+            f"{core_query} cost maintenance guide",
         ]
 
     def execute(self, inp: ScriptInput) -> ResearchResult:
